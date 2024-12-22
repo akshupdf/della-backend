@@ -17,6 +17,16 @@ router.get('/getleads', async (req, res) => {
   }
 });
 
+router.get('/:id/getUser', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(id);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // PUT route to update the status of a specific lead
 router.put('/:id/status', async (req, res) => {
   const { id } = req.params; // Get lead ID from URL params
@@ -38,7 +48,6 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
-
 // Create a new lead
 router.post('/uploadLead', authenticate, authorize(['superadmin', 'tl']), async (req, res) => {
   console.log('Request body:', req.body); // Debugging
@@ -58,7 +67,6 @@ router.post('/uploadLead', authenticate, authorize(['superadmin', 'tl']), async 
     res.status(400).json({ message: err.message });
   }
 });
-
 
 // Update a lead
 router.put('/:id', async (req, res) => {
@@ -87,7 +95,7 @@ router.post('/login', async (req, res) => {
     // Find user by username
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(400).json({ message: 'User not found' });
     }
 
     // Check if password matches
@@ -99,11 +107,13 @@ router.post('/login', async (req, res) => {
     // Generate token
     const token = user.generateAuthToken();
     const role = user?.role ;
+    const id = user?._id
 
     res.json({
       message: 'Login successful',
       token, // Send back the JWT token
-      user
+      role,
+      id
     });
   } catch (err) {
     console.error(err);
@@ -155,6 +165,16 @@ router.post('/addUser', authenticate, authorize(['superadmin']), async (req, res
   } catch (err) {
     console.error('Error creating user:', err.message);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.post('/getUsers', async (req, res) => {
+  const { role } = req.body; 
+  try {
+    const users = await User.find({role});
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
