@@ -8,6 +8,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 router.get('/getleads', async (req, res) => {
   const { status } = req.query; // Extract status from query params
 
+
   try {
     // If status is provided, filter leads; otherwise, return all leads
     const leads = status ? await Lead.find({ status }) : await Lead.find();
