@@ -1,6 +1,7 @@
 const express = require('express');
 const Lead = require('../models/Lead');
 const User = require('../models/User');
+const Membership = require('../models/Member');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -132,7 +133,7 @@ router.post('/addUser', authenticate, authorize(['superadmin']), async (req, res
   }
 
   // Check if the role is valid
-  const validRoles = ['agent', 'tl', 'superadmin'];
+  const validRoles = ['agent', 'tl', 'superadmin' , 'reception' , 'sales'];
   if (!validRoles.includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
@@ -176,6 +177,25 @@ router.post('/getUsers', async (req, res) => {
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/membership', async (req, res) => {
+  try {
+    const membership = new Membership(req.body);
+    await membership.save();
+    res.status(201).json({ message: 'Membership created successfully', membership });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get('/membership', async (req, res) => {
+  try {
+    const memberships = await Membership.find();
+    res.status(200).json(memberships);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
