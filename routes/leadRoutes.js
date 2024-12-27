@@ -19,10 +19,49 @@ router.get('/getleads', async (req, res) => {
   }
 });
 
+router.get('/:tlManager/executiveCount', async (req, res) => {
+  const { tlManager } = req.params;
+
+  try {
+    const result = await Lead.aggregate([
+      // Match leads for the specified TL Manager
+      { $match: { tlManager } },
+
+      // Group by executive and count the leads
+      {
+        $group: {
+          _id: "$executive",
+          leadCount: { $sum: 1 },
+        },
+      },
+
+      // Optionally sort the result by lead count (descending)
+      { $sort: { leadCount: -1 } },
+    ]);
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 router.get('/:id/getUser', async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/:tlId/getUsersByTl', async (req, res) => {
+  const { tlId } = req.params;
+  try {
+    // Find users where `tl` matches `tlId` and `role` is 'agent'
+    const user = await User.find({ tl: tlId, role: 'agent' }).select('-password -tl');
+
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -52,7 +91,6 @@ router.put('/:id/status', async (req, res) => {
 
 // Create a new lead
 router.post('/uploadLead', authenticate, authorize(['superadmin', 'tl']), async (req, res) => {
-  console.log('Request body:', req.body); // Debugging
 
   const leads = req.body; // Expecting an array of leads
   if (!Array.isArray(leads)) {
@@ -110,12 +148,14 @@ router.post('/login', async (req, res) => {
     const token = user.generateAuthToken();
     const role = user?.role ;
     const id = user?._id
+    const name = user?.username
 
     res.json({
       message: 'Login successful',
       token, // Send back the JWT token
       role,
-      id
+      id,
+      name
     });
   } catch (err) {
     console.error(err);
@@ -124,8 +164,8 @@ router.post('/login', async (req, res) => {
 });
 
 // POST route to add a new user
-router.post('/addUser', authenticate, authorize(['superadmin']), async (req, res) => {
-  const { username, email, password, role } = req.body;
+router.post('/addUser', authenticate, authorize(['superadmin','tl']), async (req, res) => {
+  const { username, email, password, role ,tl ,name } = req.body;
 
   // Validate input
   if (!username || !email || !password || !role) {
@@ -147,10 +187,12 @@ router.post('/addUser', authenticate, authorize(['superadmin']), async (req, res
 
     // Create a new user
     const user = new User({
+      name,
       username,
       email,
       password,
       role,
+      tl
     });
 
     // Save the user

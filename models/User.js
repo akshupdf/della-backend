@@ -4,9 +4,19 @@ const jwt = require('jsonwebtoken');
 
 // Define the schema for a User with different roles (Agent, TL, Superadmin)
 const userSchema = new mongoose.Schema({
-  username: {
+  name:{
     type: String,
     required: true,
+    unique: true,
+    trim: true,
+  },username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+  },
+  tl: {
+    type: String,
     unique: true,
     trim: true,
   },
