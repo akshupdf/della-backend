@@ -18,6 +18,7 @@ const leadSchema = new mongoose.Schema({
   tl: { type: String, default: null },
   manager: { type: String, default: null },
   status: { type: String, required: true ,  lowercase: true},
+  remark: { type: String },
 });
 
 module.exports = mongoose.model('Lead', leadSchema);
