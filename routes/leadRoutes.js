@@ -32,6 +32,32 @@ router.get("/getleads", authenticate, async (req, res) => {
   }
 });
 
+router.get("/getleads/:location",  async (req, res) => {
+  const { location } = req.params;
+
+  try {
+
+      const leads = await Lead.find({ location: { $regex: new RegExp(location, "i") } });
+      res.json(leads);
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/getleadsbyId/:id",  async (req, res) => {
+  const { id } = req.params;
+
+  try {
+
+      const leads = await Lead.find({assignTo : id });
+      res.json(leads);
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.get("/:tlManager/executiveCount", async (req, res) => {
   const { tlManager } = req.params;
 
@@ -116,6 +142,23 @@ router.get("/:tlId/getUsersByTl", async (req, res) => {
     // let count = leadCountsByAgent[0].totalLeads;
 
     res.json({ agentData });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/getUsersByRole/:role", async (req, res) => {
+  const { role } = req.params;
+
+  try {
+    // Find users based on the role passed in the params
+    const rolewiseUsers = await User.find({ role });
+
+    if (!rolewiseUsers || rolewiseUsers.length === 0) {
+      return res.status(404).json({ message: "No users found with the specified role" });
+    }
+
+    res.json({ rolewiseUsers });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -381,5 +424,35 @@ router.get("/dashboard_count", authenticate, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.post("/assignto", async (req, res) => {
+  const { assigns, userId } = req.body; // Extract IDs and userId from the request body
+
+  if (!assigns || !Array.isArray(assigns) || !userId) {
+    return res.status(400).json({ message: "Invalid input data" });
+  }
+
+  try {
+    // Use Promise.all to wait for all updates to complete
+    const updatedLeads = await Promise.all(
+      assigns.map(async (leadId) => {
+        const lead = await Lead.findById(leadId); // Find the lead by ID
+        if (!lead) {
+          throw new Error(`Lead with ID ${leadId} not found`);
+        }
+
+        lead.assignTo = userId; // Assign the user ID to the lead
+        return await lead.save(); // Save and return the updated lead
+      })
+    );
+
+    res.json(updatedLeads); // Send all updated leads as a response
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+
+
 
 module.exports = router;
