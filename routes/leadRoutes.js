@@ -4,6 +4,9 @@ const User = require("../models/User");
 const Membership = require("../models/Member");
 const router = express.Router();
 const { authenticate, authorize } = require("../middleware/auth");
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../db/cloude');
+const multer = require("multer");
 
 // GET route to filter leads by status
 router.get("/getleads", authenticate, async (req, res) => {
@@ -20,7 +23,7 @@ router.get("/getleads", authenticate, async (req, res) => {
 
     let leads;
 
-    if (role === "superadmin") {
+    if (role === "superadmin" || status === "all") {
       leads = await Lead.find();
       res.json(leads);
     } else {
@@ -250,7 +253,7 @@ router.post(
 );
 
 // Update a lead
-router.put("/:id", async (req, res) => {
+router.put("/updateLead/:id", async (req, res) => {
   try {
     const updatedLead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -452,7 +455,27 @@ router.post("/assignto", async (req, res) => {
   }
 });
 
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'uploads', // Folder name in Cloudinary
+    allowed_formats: ['jpg', 'png' , 'jpeg' , 'avif'], // Allowed formats
+  },
+});
 
+const upload = multer({ storage });
+
+router.post('/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  try {   
+    res.json({ message: 'File uploaded successfully', url: req.file.path });
+  } catch (err) {   
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 module.exports = router;
