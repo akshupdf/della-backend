@@ -233,7 +233,7 @@ router.post(
       const tlId = leads[0]?.tl; // Assuming all leads have the same TL ID
       if (tlId) {
         // Update the TL statistics (replace `TeamLead` with your TL model)
-        await TeamLead.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
           tlId,
           {
             $inc: { totalLeads, confirmedLeads },
