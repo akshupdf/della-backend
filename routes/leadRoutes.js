@@ -244,7 +244,7 @@ router.post(
         );
       }
 
-      res.status(201).json("Leads saved successfully");
+      res.status(201).json("Leads saved successfully ");
     } catch (err) {
       console.error("Error saving leads:", err.message);
       res.status(400).json({ message: err.message });
