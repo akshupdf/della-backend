@@ -453,13 +453,7 @@ router.post("/assignto", async (req, res) => {
   }
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'uploads', // Folder name in Cloudinary
-    allowed_formats: ['jpg', 'png' , 'jpeg' , 'avif'], // Allowed formats
-  },
-});
+
 
 
 module.exports = router;
