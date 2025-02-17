@@ -7,7 +7,7 @@ const { authenticate, authorize } = require("../middleware/auth");
 
 
 // GET route to filter leads by status
-router.get("/getleads", authenticate, async (req, res) => {
+router.get("/getleads", authenticate , async (req, res) => {
   const { status } = req.query; // Extract status from query params
   const { _id, role } = req.user;
 
@@ -321,7 +321,7 @@ router.post(
     }
 
     // Check if the role is valid
-    const validRoles = ["agent", "tl", "superadmin", "reception", "sales"];
+    const validRoles = ["agent", "tl", "superadmin", "reception", "sales"  ,"customercare"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
@@ -385,9 +385,10 @@ router.post("/membership", async (req, res) => {
   }
 });
 
-router.get("/membership", async (req, res) => {
+router.post("/findmembership", async (req, res) => {
+  const { id } = req.body;
   try {
-    const memberships = await Membership.find();
+    const memberships = await Membership.find({id});
     res.status(200).json(memberships);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -453,21 +454,6 @@ router.post("/assignto", async (req, res) => {
   }
 });
 
-router.get("/nifty-options", async (req, res) => {
-  try {
-    const response = await fetch("https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://www.nseindia.com/"
-      },  
-    });
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching data" });
-  }
-});
 
 
 
