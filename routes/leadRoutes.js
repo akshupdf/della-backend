@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Membership = require("../models/Member");
 const router = express.Router();
 const { authenticate, authorize } = require("../middleware/auth");
+const mongoose = require("mongoose")
 
 
 // GET route to filter leads by status
@@ -385,10 +386,20 @@ router.post("/membership", async (req, res) => {
   }
 });
 
+router.get("/allmembers", async (req, res) => {
+  
+  try {
+    const memberships = await Membership.find();
+    res.status(200).json(memberships);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post("/findmembership", async (req, res) => {
   const { id } = req.body;
   try {
-    const memberships = await Membership.find({id});
+    const memberships = await Membership.find({_id : new mongoose.Types.ObjectId(id) });
     res.status(200).json(memberships);
   } catch (error) {
     res.status(500).json({ error: error.message });
