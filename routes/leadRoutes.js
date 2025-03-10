@@ -4,7 +4,9 @@ const User = require("../models/User");
 const Membership = require("../models/Member");
 const router = express.Router();
 const { authenticate, authorize } = require("../middleware/auth");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const Benefit = require("../models/Services");
+const ClubBenefit = require("../models/clubServices");
 
 
 // GET route to filter leads by status
@@ -322,7 +324,7 @@ router.post(
     }
 
     // Check if the role is valid
-    const validRoles = ["agent", "tl", "superadmin", "reception", "sales"  ,"customercare"];
+    const validRoles = ["agent", "tl", "superadmin", "reception", "sales"  ,"customercare" , "reservation"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
@@ -384,6 +386,15 @@ router.post("/membership", async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+});
+
+router.get("/allmembership", async (req, res) => {
+  try {
+     const memberships = await Membership.find();
+     res.status(200).json(memberships);
+   } catch (error) {
+     res.status(500).json({ error: error.message });
+   }
 });
 
 router.get("/allmembers", async (req, res) => {
@@ -465,7 +476,207 @@ router.post("/assignto", async (req, res) => {
   }
 });
 
+// Create Benefit
+router.post("/benefit", async (req, res) => {
+  try {
+    const benefit = new Benefit(req.body);
+    await benefit.save();
+    res.status(201).json(benefit);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
+// Create Travel Benefit
+router.post("/clubbenefit", async (req, res) => {
+  try {
+    const clubbenefit = new ClubBenefit(req.body);
+    await clubbenefit.save();
+    res.status(201).json(clubbenefit);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get All Benefits
+router.get("/allbenefits", async (req, res) => {
+  try {
+    const benefits = await Benefit.find();
+    res.json(benefits);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Benefit by ID
+router.get("/benefit/:id", async (req, res) => {
+  try {
+    const benefit = await Benefit.findById(req.params.id);
+    if (!benefit) return res.status(404).json({ message: "Benefit not found" });
+    res.json(benefit);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Benefits by MemberID
+
+router.get("/benefits/:memberId", async (req, res) => {
+  try {
+    const benefits = await Benefit.find({ memberId: req.params.memberId });
+    if (!benefits.length) {
+      return res.status(404).json({ message: "No benefits found for this member" });
+    }
+    res.json(benefits);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update Benefit by ID
+router.put("/editbenefit/:id", async (req, res) => {
+  try {
+    const benefit = await Benefit.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!benefit) return res.status(404).json({ message: "Benefit not found" });
+    res.json(benefit);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete Benefit by ID
+router.delete("/deletebenefit/:id", async (req, res) => {
+  try {
+    const benefit = await Benefit.findByIdAndDelete(req.params.id);
+    if (!benefit) return res.status(404).json({ message: "Benefit not found" });
+    res.json({ message: "Benefit deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get All Club Benefits
+router.get("/allclubbenefits", async (req, res) => {
+  try {
+    const clubbenefits = await ClubBenefit.find();
+    res.json(clubbenefits);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Club Benefit by ID
+router.get("/clubbenefit/:id", async (req, res) => {
+  try {
+    const clubbenefit = await ClubBenefit.findById(req.params.id);
+    if (!clubbenefit) return res.status(404).json({ message: "Club Benefit not found" });
+    res.json(clubbenefit);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get Club Benefits by MemberID
+router.get("/clubbenefits/:memberId", async (req, res) => {
+  try {
+    const clubbenefits = await ClubBenefit.find({ memberId: req.params.memberId });
+    if (!clubbenefits.length) {
+      return res.status(404).json({ message: "No club benefits found for this member" });
+    }
+    res.json(clubbenefits);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update Club Benefit by ID
+router.put("/editclubbenefit/:id", async (req, res) => {
+  try {
+    const clubbenefit = await ClubBenefit.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!clubbenefit) return res.status(404).json({ message: "Club Benefit not found" });
+    res.json(clubbenefit);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete Club Benefit by ID
+router.delete("/deleteclubbenefit/:id", async (req, res) => {
+  try {
+    const clubbenefit = await ClubBenefit.findByIdAndDelete(req.params.id);
+    if (!clubbenefit) return res.status(404).json({ message: "Club Benefit not found" });
+    res.json({ message: "Club Benefit deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT route to update the status of a specific lead
+router.put("/:id/status", async (req, res) => {
+  const { id } = req.params; // Get lead ID from URL params
+  const { status } = req.body; // Extract new status from request body
+
+  try {
+    const lead = await Lead.findById(id); // Find the lead by ID
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // Update the status field
+    lead.status = status || lead.status;
+    const updatedLead = await lead.save(); // Save the updated lead
+
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Update ben_status in Benefit
+router.put("/clubbenefit/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { ben_status } = req.body;
+
+  try {
+    const benefit = await ClubBenefit.findById(id);
+    if (!benefit) {
+      return res.status(404).json({ message: "Benefit not found" });
+    }
+
+    benefit.ben_status = ben_status || benefit.ben_status;
+    const updatedBenefit = await benefit.save();
+
+    res.json(updatedBenefit);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Update trav_status in ClubBenefit
+router.put("/benefit/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { trav_status } = req.body;
+
+  try {
+    const clubBenefit = await Benefit.findById(id);
+    if (!clubBenefit) {
+      return res.status(404).json({ message: "Club Benefit not found" });
+    }
+
+    clubBenefit.trav_status = trav_status || clubBenefit.trav_status;
+    const updatedClubBenefit = await clubBenefit.save();
+
+    res.json(updatedClubBenefit);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
 
 
 module.exports = router;
